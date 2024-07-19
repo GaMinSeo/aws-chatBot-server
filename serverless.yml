@@ -8,18 +8,21 @@ custom:
 
 provider:
   name: aws
-  runtime: python3.10
+  runtime: provided.al2  # Amazon Linux 2 사용
+  region: us-east-1
+  ecr:
+    images:
+      appimage:
+        uri: 471112984004.dkr.ecr.us-east-1.amazonaws.com/godblessyou:latest
 
 functions:
-  api:
-    handler: wsgi_handler.handler
+  app:
+    image:
+      name: appimage
+    timeout: 120
+    memorySize: 2048
     events:
-      - http:
-          path: /
-          method: ANY
-      - http:
-          path: /{proxy+}
-          method: ANY
+      - httpApi: '*'
 
 plugins:
   - serverless-wsgi

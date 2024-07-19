@@ -6,9 +6,16 @@
     },
     "provider": {
       "name": "aws",
-      "runtime": "python3.9",
-      "stage": "dev",
+      "runtime": "provided.al2",
       "region": "us-east-1",
+      "ecr": {
+        "images": {
+          "appimage": {
+            "uri": "471112984004.dkr.ecr.us-east-1.amazonaws.com/godblessyou:latest"
+          }
+        }
+      },
+      "stage": "dev",
       "versionFunctions": true,
       "compiledCloudFormationTemplate": {
         "AWSTemplateFormatVersion": "2010-09-09",
@@ -83,10 +90,10 @@
               }
             }
           },
-          "ApiLogGroup": {
+          "AppLogGroup": {
             "Type": "AWS::Logs::LogGroup",
             "Properties": {
-              "LogGroupName": "/aws/lambda/godblessyou-dev-api"
+              "LogGroupName": "/aws/lambda/godblessyou-dev-app"
             }
           },
           "IamRoleLambdaExecution": {
@@ -167,20 +174,16 @@
               }
             }
           },
-          "ApiLambdaFunction": {
+          "AppLambdaFunction": {
             "Type": "AWS::Lambda::Function",
             "Properties": {
               "Code": {
-                "S3Bucket": {
-                  "Ref": "ServerlessDeploymentBucket"
-                },
-                "S3Key": "serverless/godblessyou/dev/1721015486924-2024-07-15T03:51:26.924Z/godblessyou.zip"
+                "ImageUri": "471112984004.dkr.ecr.us-east-1.amazonaws.com/godblessyou@sha256:36985e25d41db1fdb6de771163fc08a585f6cfe3eb6ae4b663c022d14fc24691"
               },
-              "Handler": "wsgi_handler.handler",
-              "Runtime": "python3.9",
-              "FunctionName": "godblessyou-dev-api",
-              "MemorySize": 1024,
-              "Timeout": 6,
+              "PackageType": "Image",
+              "FunctionName": "godblessyou-dev-app",
+              "MemorySize": 2048,
+              "Timeout": 120,
               "Role": {
                 "Fn::GetAtt": [
                   "IamRoleLambdaExecution",
@@ -189,17 +192,17 @@
               }
             },
             "DependsOn": [
-              "ApiLogGroup"
+              "AppLogGroup"
             ]
           },
-          "ApiLambdaVersionoRYGnZmCfCdbTk02sdWLxlDGaNjoxi96AAQQxYo": {
+          "AppLambdaVersiondBDpULmCu0h9P7uKgYLBjMmibHbOYh4T0jqv7AenY": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
-                "Ref": "ApiLambdaFunction"
+                "Ref": "AppLambdaFunction"
               },
-              "CodeSha256": "VFYoHYf7KGmclr1Wvy+NViZCj+YXipuBlyd9Y3nOl8Q="
+              "CodeSha256": "36985e25d41db1fdb6de771163fc08a585f6cfe3eb6ae4b663c022d14fc24691"
             }
           },
           "HttpApi": {
@@ -222,12 +225,12 @@
               }
             }
           },
-          "ApiLambdaPermissionHttpApi": {
+          "AppLambdaPermissionHttpApi": {
             "Type": "AWS::Lambda::Permission",
             "Properties": {
               "FunctionName": {
                 "Fn::GetAtt": [
-                  "ApiLambdaFunction",
+                  "AppLambdaFunction",
                   "Arn"
                 ]
               },
@@ -259,7 +262,7 @@
               }
             }
           },
-          "HttpApiIntegrationApi": {
+          "HttpApiIntegrationApp": {
             "Type": "AWS::ApiGatewayV2::Integration",
             "Properties": {
               "ApiId": {
@@ -267,7 +270,7 @@
               },
               "IntegrationType": "AWS_PROXY",
               "IntegrationUri": {
-                "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"ApiLambdaPermissionHttpApi\"][\"Properties\"][\"FunctionName\"]"
+                "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"AppLambdaPermissionHttpApi\"][\"Properties\"][\"FunctionName\"]"
               },
               "PayloadFormatVersion": "2.0",
               "TimeoutInMillis": 30000
@@ -286,13 +289,13 @@
                   [
                     "integrations",
                     {
-                      "Ref": "HttpApiIntegrationApi"
+                      "Ref": "HttpApiIntegrationApp"
                     }
                   ]
                 ]
               }
             },
-            "DependsOn": "HttpApiIntegrationApi"
+            "DependsOn": "HttpApiIntegrationApp"
           }
         },
         "Outputs": {
@@ -304,13 +307,13 @@
               "Name": "sls-godblessyou-dev-ServerlessDeploymentBucketName"
             }
           },
-          "ApiLambdaFunctionQualifiedArn": {
+          "AppLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "ApiLambdaVersionoRYGnZmCfCdbTk02sdWLxlDGaNjoxi96AAQQxYo"
+              "Ref": "AppLambdaVersiondBDpULmCu0h9P7uKgYLBjMmibHbOYh4T0jqv7AenY"
             },
             "Export": {
-              "Name": "sls-godblessyou-dev-ApiLambdaFunctionQualifiedArn"
+              "Name": "sls-godblessyou-dev-AppLambdaFunctionQualifiedArn"
             }
           },
           "HttpApiId": {
@@ -444,21 +447,23 @@
     ],
     "pluginsData": {},
     "functions": {
-      "api": {
-        "handler": "wsgi_handler.handler",
+      "app": {
+        "image": {
+          "name": "appimage"
+        },
+        "timeout": 120,
+        "memorySize": 2048,
         "events": [
           {
             "httpApi": "*",
             "resolvedMethod": "ANY"
           }
         ],
-        "name": "godblessyou-dev-api",
+        "name": "godblessyou-dev-app",
         "package": {},
-        "memory": 1024,
-        "timeout": 6,
-        "runtime": "python3.9",
+        "memory": 2048,
         "vpc": {},
-        "versionLogicalId": "ApiLambdaVersionoRYGnZmCfCdbTk02sdWLxlDGaNjoxi96AAQQxYo"
+        "versionLogicalId": "AppLambdaVersiondBDpULmCu0h9P7uKgYLBjMmibHbOYh4T0jqv7AenY"
       }
     },
     "configValidationMode": "warn",
@@ -477,14 +482,30 @@
       },
       "plugins": {
         "$ref": "$[\"service\"][\"plugins\"]"
+      },
+      "package": {
+        "individually": true,
+        "patterns": [
+          "app/**",
+          "handler.py",
+          "config/**",
+          "node_modules/**",
+          ".git/**",
+          "tests/**",
+          "wsgi_handler.py",
+          "serverless_wsgi.py",
+          ".serverless-wsgi"
+        ],
+        "artifactsS3KeyDirname": "serverless/godblessyou/dev/code-artifacts",
+        "artifactDirectoryName": "serverless/godblessyou/dev/1721292400067-2024-07-18T08:46:40.067Z"
       }
     },
     "layers": {},
-    "isDashboardMonitoringPreconfigured": false,
-    "artifact": "C:\\Users\\rkehf\\OneDrive\\문서\\GitHub\\godblessyou\\.serverless\\godblessyou.zip"
+    "isDashboardMonitoringPreconfigured": false
   },
   "package": {
-    "artifactDirectoryName": "serverless/godblessyou/dev/1721015486924-2024-07-15T03:51:26.924Z",
-    "artifact": "godblessyou.zip"
+    "individually": true,
+    "artifactDirectoryName": "serverless/godblessyou/dev/1721292400067-2024-07-18T08:46:40.067Z",
+    "artifact": ""
   }
 }
