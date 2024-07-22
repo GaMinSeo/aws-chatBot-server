@@ -1,7 +1,7 @@
 # 챗봇 API
 
 이 프로젝트는 SentenceTransformer 모델을 사용하여 사용자 입력과 미리 정의된 응답 간의 유사성을 기반으로 응답을 제공하는 간단한 챗봇 API입니다.
-
+![initial](https://github.com/user-attachments/assets/f20758f1-6fb5-4986-8eeb-bf7ea8b4d7fb.PNG)
 ## 목차
 
 - [API 엔드포인트](#api-엔드포인트)
