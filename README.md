@@ -1,131 +1,59 @@
-<!--
-title: 'Serverless Framework Python Flask API on AWS'
-description: 'This template demonstrates how to develop and deploy a simple Python Flask API running on AWS Lambda using the traditional Serverless Framework.'
-layout: Doc
-framework: v3
-platform: AWS
-language: Python
-priority: 2
-authorLink: 'https://github.com/serverless'
-authorName: 'Serverless, inc.'
-authorAvatar: 'https://avatars1.githubusercontent.com/u/13742415?s=200&v=4'
--->
+# 챗봇 API
 
-# Serverless Framework Python Flask API on AWS
+이 프로젝트는 SentenceTransformer 모델을 사용하여 사용자 입력과 미리 정의된 응답 간의 유사성을 기반으로 응답을 제공하는 간단한 챗봇 API입니다.
 
-This template demonstrates how to develop and deploy a simple Python Flask API service running on AWS Lambda using the traditional Serverless Framework.
+## 목차
 
+- [API 엔드포인트](#api-엔드포인트)
+- [데이터 형식](#데이터-형식)
+- [의존성](#의존성)
+- [AWS Lambda 배포](#aws-lambda-배포)
 
-## Anatomy of the template
+## API 엔드포인트
 
-This template configures a single function, `api`, which is responsible for handling all incoming requests thanks to configured `httpApi` events. To learn more about `httpApi` event configuration options, please refer to [httpApi event docs](https://www.serverless.com/framework/docs/providers/aws/events/http-api/). As the events are configured in a way to accept all incoming requests, `Flask` framework is responsible for routing and handling requests internally. The implementation takes advantage of `serverless-wsgi`, which allows you to wrap WSGI applications such as Flask apps. To learn more about `serverless-wsgi`, please refer to corresponding [GitHub repository](https://github.com/logandk/serverless-wsgi). Additionally, the template relies on `serverless-python-requirements` plugin for packaging dependencies from `requirements.txt` file. For more details about `serverless-python-requirements` configuration, please refer to corresponding [GitHub repository](https://github.com/UnitedIncome/serverless-python-requirements).
+### POST /chatbot
 
-## Usage
+- **요청 형식**: BODY JSON
+    ```json
+    {
+        "message": "안녕하세요"
+    }
+    ```
+- **응답 형식**: JSON
+    ```json
+    {
+        "result": "success",
+        "answer": "안녕하세요! 무엇을 도와드릴까요?",
+        "timeStamp": "2023-07-22T12:34:56.789Z"
+    }
+    ```
 
-### Prerequisites
+## 데이터 형식
 
-In order to package your dependencies locally with `serverless-python-requirements`, you need to have `Python3.9` installed locally. You can create and activate a dedicated virtual environment with the following command:
+- **combined_data.csv** 파일은 두 개의 주요 열을 포함합니다:
+  - `embedding`: 문장의 임베딩 벡터
+  - `chatbot`: 챗봇의 응답
 
-```bash
-python3.9 -m venv ./venv
-source ./venv/bin/activate
-```
+## 의존성
 
-Alternatively, you can also use `dockerizePip` configuration from `serverless-python-requirements`. For details on that, please refer to corresponding [GitHub repository](https://github.com/UnitedIncome/serverless-python-requirements).
+이 프로젝트는 다음과 같은 주요 라이브러리에 의존합니다:
+- Flask
+- Flask-RESTful
+- SentenceTransformer
+- PyTorch
+- 기타 의존성은 `requirements.txt` 파일을 참고하십시오.
 
-### Deployment
+## AWS Lambda 배포
 
-This example is made to work with the Serverless Framework dashboard, which includes advanced features such as CI/CD, monitoring, metrics, etc.
+### 가상환경 설정 및 Docker 컨테이너로 AWS ECR 활용
 
-In order to deploy with dashboard, you need to first login with:
+1. `Dockerfile` 작성:
 
-```
-serverless login
-```
+2. Docker 이미지 빌드 및 ECR에 푸시:
 
-install dependencies with:
+3. AWS Lambda 함수 생성 및 설정:
+    - AWS Lambda 콘솔에서 새 함수를 생성하고, 배포 패키지로 ECR 이미지를 사용하도록 설정합니다.
+    - 필요한 IAM 역할과 권한을 설정합니다.
 
-```
-npm install
-```
-
-and
-
-```
-pip install -r requirements.txt
-```
-
-and then perform deployment with:
-
-```
-serverless deploy
-```
-
-After running deploy, you should see output similar to:
-
-```bash
-Deploying aws-python-flask-api-project to stage dev (us-east-1)
-
-✔ Service deployed to stack aws-python-flask-api-project-dev (182s)
-
-endpoint: ANY - https://xxxxxxxx.execute-api.us-east-1.amazonaws.com
-functions:
-  api: aws-python-flask-api-project-dev-api (1.5 MB)
-```
-
-_Note_: In current form, after deployment, your API is public and can be invoked by anyone. For production deployments, you might want to configure an authorizer. For details on how to do that, refer to [httpApi event docs](https://www.serverless.com/framework/docs/providers/aws/events/http-api/).
-
-### Invocation
-
-After successful deployment, you can call the created application via HTTP:
-
-```bash
-curl https://xxxxxxx.execute-api.us-east-1.amazonaws.com/dev/
-```
-
-Which should result in the following response:
-
-```
-{"message":"Hello from root!"}
-```
-
-Calling the `/hello` path with:
-
-```bash
-curl https://xxxxxxx.execute-api.us-east-1.amazonaws.com/dev/hello
-```
-
-Should result in the following response:
-
-```bash
-{"message":"Hello from path!"}
-```
-
-If you try to invoke a path or method that does not have a configured handler, e.g. with:
-
-```bash
-curl https://xxxxxxx.execute-api.us-east-1.amazonaws.com/dev/nonexistent
-```
-
-You should receive the following response:
-
-```bash
-{"error":"Not Found!"}
-```
-
-### Local development
-
-Thanks to capabilities of `serverless-wsgi`, it is also possible to run your application locally, however, in order to do that, you will need to first install `werkzeug` dependency, as well as all other dependencies listed in `requirements.txt`. It is recommended to use a dedicated virtual environment for that purpose. You can install all needed dependencies with the following commands:
-
-```bash
-pip install werkzeug
-pip install -r requirements.txt
-```
-
-At this point, you can run your application locally with the following command:
-
-```bash
-serverless wsgi serve
-```
-
-For additional local development capabilities of `serverless-wsgi` plugin, please refer to corresponding [GitHub repository](https://github.com/logandk/serverless-wsgi).
+4. API Gateway 설정:
+    - AWS API Gateway를 사용하여 Lambda 함수와 연결하고, HTTP 엔드포인트를 설정합니다.
