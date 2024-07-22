@@ -22,7 +22,7 @@ with open(local_data_path, 'r', encoding='utf-8') as file:
     data = [row for row in reader]
 
 embeddings = [json.loads(row['embedding']) for row in data]
-chatbot_responses = [row['챗봇'] for row in data]
+chatbot_responses = [row['chatbot'] for row in data]
 
 class ChatBotResource(Resource):
     def post(self):
